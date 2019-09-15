@@ -1,0 +1,153 @@
+<html>
+	<head>
+		<TITLE>记忆力测试</TITLE>
+		<meta charset="UTF-8">
+		<style>
+			img{
+				width: 50px;
+				height: 50px;
+			}
+		</style>
+		<script language="JavaScript">
+			var pics = new Array();
+			for(i = 0; i <= 18; i++) {
+				pics[i] = new Image();
+				pics[i].src = 'img/' + i + '.png';
+			}
+			var map = new Array(1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18);
+			var user = new Array();				//用于判断牌对应的位置是否完成了（就是两张牌已经相等且被翻开了）0就是没被翻开 1就是翻开然后两张相等了
+			var temparray = new Array();		//用于打乱牌的顺序
+			var clickarray = new Array(0, 0);	//保存两次翻的索引
+			var ticker, sec, min, ctr, id, oktoclick, finished;
+			//finished 保存已完成翻开的牌数
+			var anx = new Array(); //answer  用来看打乱循环后牌的位置
+			var any = new Array(); //answer
+			function init() {		//初始化
+				clearTimeout(id);
+				for(i = 0; i <= 35; i++) {
+					user[i] = 0;
+				}
+				ticker = 0;
+				min = 0;
+				sec = 0;
+				ctr = 0;
+				oktoclick = true;
+				finished = 0;
+				document.f.b.value = "";
+				scramble();
+				runclk();
+				for(i = 0; i <= 35; i++) {
+					document.f[('img' + i)].src = "img/0.png";
+				}
+				answer();
+			}
+
+			var answer = function(){		//吧打乱顺序后的map在后台打印出来
+				for(i = 0;i < 6;i++){
+				any = new Array();
+					for(j = 0;j < 6;j++){
+						var yx = i * 6;
+						yx+=j;
+						any[j]=map[yx];
+					}
+					anx[i] = any;
+				}
+				console.log(anx);
+			}
+
+			var runclk = function() {				//用来显示时间过来多久
+				min = Math.floor(ticker / 60);		//分钟
+				sec = (ticker - (min * 60)) + '';	//秒
+				if(sec.length == 1) {
+					sec = "0" + sec
+				};
+				ticker++;
+				document.f.b.value = min + ":" + sec;
+				id = setTimeout('runclk()', 1000);
+			}
+
+			var scramble= function() {						//打乱顺序
+				for(z = 0; z < 5; z++) {
+					for(x = 0; x <= 35; x++) {
+						temparray[0] = Math.floor(Math.random() * 36);// 空杯替换循环出来的       比如随机数是10   那么就和  x也就是循环到的那个数 互相交换位置
+						temparray[1] = map[temparray[0]];			//0保存随机数    1保存map对应索引0里面的的数   2保存map对应循环变量x里面的数
+						temparray[2] = map[x];
+						map[x] = temparray[1];						//相互交换
+						map[temparray[0]] = temparray[2];
+					}
+				}
+			}
+
+			var showimage = function(but) {					//翻的牌 对应位置上的map值
+				if(oktoclick) {								//
+					oktoclick = false;						//oktoclick 进来一次吧它设成false 看翻开的是第几次牌
+					document.f[('img' + but)].src = 'img/' + map[but] + '.png';//吧翻的牌对应位置上的map图片显示出来
+					if(ctr == 0) {							//如果翻开的是第一次
+						ctr++;								//做加加让下次进来变成第二次
+						clickarray[0] = but;				//吧本次进来的位置保存到变量用于判断两次的牌是否一样
+						oktoclick = true;					//oktoclick 吧它设成true 让第二次能进来 
+					} else {
+						clickarray[1] = but;				//吧第二次翻的牌保存到另一个变量里
+						ctr = 0;							//吧翻牌变为0然后去计算本次是否一样
+						setTimeout('returntoold()', 600);	//去到计算方法
+					}
+				}
+			}
+
+			var returntoold= function() {
+				if((clickarray[0] == clickarray[1]) && (!user[clickarray[0]])) {//判断开始翻牌了没 因为翻了一次clickarray就不等于0了
+					document.f[('img' + clickarray[0])].src = "img/0.png";
+					oktoclick = true;			//
+				} else {
+					if(map[clickarray[0]] != map[clickarray[1]]) {				//拿刚刚翻的两个牌的索引对应在map上面看看是否不相等
+						if(user[clickarray[0]] == 0) {							//吧不相等的两张牌翻回去 但在这之前判断这次翻的牌是不是已经被翻开的
+							document.f[('img' + clickarray[0])].src = "img/0.png";
+						}
+						if(user[clickarray[1]] == 0) {
+							document.f[('img' + clickarray[1])].src = "img/0.png";
+						}
+					}
+					if(map[clickarray[0]] == map[clickarray[1]]) {					//如果两张牌相等
+						if(user[clickarray[0]] == 0 && user[clickarray[1]] == 0) {	//且不是已经被翻开过的
+							finished++;												//都进入了就finished加1 表示已经翻开的对数
+						}
+						user[clickarray[0]] = 1;									//吧完成的位置变为1
+						user[clickarray[1]] = 1;	
+					}
+					if(finished >= 18) {											//判断是否翻完了
+						alert('You did it in ' + document.f.b.value + ' !');
+						init();
+					} else {						
+						oktoclick = true;											
+					}
+				}
+			}
+		</script>
+	</head>
+
+	<body OnLoad="init()">
+		<center>
+			<h2>翻牌</h2>
+			<form name="f">
+				<table cellpadding="0" cellspacing="0" border="0">
+					<script language="javascript">
+						for(r = 0; r <= 5; r++) {
+							document.write('<tr>');
+							for(c = 0; c <= 5; c++) {
+								document.write('<td align="center">');
+								document.write('<a href="javascript:showimage(' + ((6 * r) + c) + ')" onClick="document.f.b.focus()">');
+								document.write('<img src="img/0.png" name="img' + ((6 * r) + c) + '" border="0">');
+								document.write('</a></td>');
+							}
+							document.write('</tr>');
+						}
+					</script>
+				</table>
+				<br><br>
+				<input type="button" value="" name="b" onClick="init()">
+			</form>
+			规则：<br> 　　1. 36张图分为18对。每一个回合翻开两张图。<br> 　　2. 如果两张图相同，则不在被覆盖。否则图被按钮覆盖，但位置不变<br> 　　3. 在最短的时间里将所有的图翻开来.时间越短,当然记忆力就越强.<br> 　　4. 每次重新开始,图的位置随机变换. <br> 　　5. 单击空白按钮开始计时。 <br>
+		</center>
+	</body>
+
+	</html>
